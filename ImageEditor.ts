@@ -58,6 +58,7 @@ class ImageEditor {
       this.instructions();
       return;
     }
+    console.log(args[0]);
 
     const inputFile = args[0];
     const outputFile = args[1];
@@ -115,24 +116,26 @@ class ImageEditor {
   }
 
   private motionblur(image: Image, length: number): void {
-    if (length < 1) return;
-
     for (let x = 0; x < image.getWidth(); x++) {
       for (let y = 0; y < image.getHeight(); y++) {
         const curColor = image.get(x, y);
 
-        let maxX = Math.min(image.getWidth() - 1, x + length - 1);
-        for (let i = x + 1; i < +maxX; ++i) {
+        let totalR = curColor.red;
+        let totalG = curColor.green;
+        let totalB = curColor.blue;
+
+        const maxX = Math.min(image.getWidth() - 1, x + length - 1);
+        for (let i = x + 1; i <= maxX; i++) {
           const tmpColor = image.get(i, y);
-          curColor.red += tmpColor.red;
-          curColor.green += tmpColor.green;
-          curColor.blue += tmpColor.blue;
+          totalR += tmpColor.red;
+          totalG += tmpColor.green;
+          totalB += tmpColor.blue;
         }
 
         const delta = maxX - x + 1;
-        curColor.red /= delta;
-        curColor.green /= delta;
-        curColor.blue /= delta;
+        curColor.red = Math.floor(totalR / delta);
+        curColor.green = Math.floor(totalG / delta);
+        curColor.blue = Math.floor(totalB / delta);
       }
     }
   }
@@ -153,8 +156,9 @@ class ImageEditor {
       for (let y = 0; y < image.getHeight(); y++) {
         const curColor = image.get(x, y);
 
-        let grayLevel: number =
-          (curColor.red + curColor.green + curColor.blue) / 3;
+        let grayLevel: number = Math.floor(
+          (curColor.red + curColor.green + curColor.blue) / 3
+        );
         grayLevel = Math.max(0, Math.min(255, grayLevel));
 
         curColor.red = grayLevel;
@@ -235,4 +239,9 @@ class ImageEditor {
     }
     fs.writeFileSync(filePath, output, "utf-8");
   }
+}
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  new ImageEditor().run(args);
 }
